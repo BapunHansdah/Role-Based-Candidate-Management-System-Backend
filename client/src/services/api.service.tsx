@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "/api",
-  withCredentials: true, // Ensures cookies are sent with requests
+  baseURL: "https://test.unifillai.com/api",
+  withCredentials: true, 
 });
 
 export default api;
