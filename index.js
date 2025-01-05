@@ -1,11 +1,14 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import cookieParser from 'cookie-parser';
-import cors from 'cors';
-import connectDB from './config/db.js';
-import authRoutes from './routes/auth.js';
-import adminRoutes from './routes/admin.js';
-import candidateRoutes from './routes/candidate.js';
+import express from "express";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import connectDB from "./config/db.js";
+import authRoutes from "./routes/auth.js";
+import adminRoutes from "./routes/admin.js";
+import candidateRoutes from "./routes/candidate.js";
+import path from 'path'
+const __dirname = path.resolve()
+
 dotenv.config();
 
 // Connect to MongoDB
@@ -18,18 +21,31 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: '*', 
+    origin: "*",
   })
 );
 
+// if (process.env.NODE_ENV === "production") {
 
-app.use('/api/test', (req, res) => {
-  res.json({ message: 'API is working' });
-})
+// } else {
+//   app.get("*", (req, res) => {
+//     res.send("api running");
+//   });
+// }
+
+app.use("/api/test", (req, res) => {
+  res.json({ message: "API is working" });
+});
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/candidate', candidateRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/candidate", candidateRoutes);
+
+app.use(express.static("client/dist"));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "client", "dist", "index.html"));
+});
 
 // Start the server
 const PORT = process.env.PORT || 5000;
