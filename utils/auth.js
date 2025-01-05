@@ -18,8 +18,8 @@ export const generateToken = (userId, role) => {
 
 export const setTokenCookie = (res, token) => {
   res.cookie("jwt", token, {
-    httpOnly: true,
-    secure: false,
+    httpOnly: false,
+    secure: true,
     sameSite: "strict",
   });
 }
