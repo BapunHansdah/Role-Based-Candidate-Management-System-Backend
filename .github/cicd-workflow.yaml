@@ -13,17 +13,17 @@ jobs:
       - name: Login to docker hub
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
       - name: Build docker image
-        run: docker build -t aniquemaniac/cloud-automation-new .
+        run: docker build -t aniquemaniac/role_based_candidate_management_system .
       - name: Publish image to docker hub
-        run: docker push aniquemaniac/cloud-automation-new:latest
+        run: docker push aniquemaniac/role_based_candidate_management_system:latest
         
   deploy:
     needs: build
     runs-on: [self-hosted]
     steps:
       - name: Pull image from docker hub
-        run: docker pull aniquemaniac/cloud-automation-new:latest
+        run: docker pull aniquemaniac/role_based_candidate_management_system:latest
       - name: Delete old container
         run: docker rm -f nodejs-app-container
       - name: Run docker container
-        run: docker run -d -p 7070:7070 --name nodejs-app-container aniquemaniac/cloud-automation-new
+        run: docker run -d -p 7070:7070 --name nodejs-app-container aniquemaniac/role_based_candidate_management_system
