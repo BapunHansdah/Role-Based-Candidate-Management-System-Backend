@@ -19,7 +19,8 @@ export const generateToken = (userId, role) => {
 export const setTokenCookie = (res, token) => {
   res.cookie("jwt", token, {
     httpOnly: true,
-    secure: true,
-    sameSite: "strict",
+    path: "/",
+    sameSite: "None", // Only use with HTTPS
+    secure: true // Only use with HTTPS
   });
 }
