@@ -58,37 +58,6 @@ router.post(
   })
 );
 
-// @route POST /register
-router.post("/admin/candidate/create", authMiddleware, async (req, res) => {
-  const { name, email, password, phone } = req.body;
-
-  try {
-    //check if user is admin
-    if (req.user.role !== "admin") {
-      throw new Error("You are not authorized to register a user");
-    }
-    //check if user already exists
-    const userExists = await User.findOne({ email });
-    if (userExists) throw new Error("User already exists");
-  
-    //hash password
-    const hashedPassword = await hashPassword(password);
-
-    //create user
-    const newUser = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role: "user",
-      phone,
-    });
-
-    res.status(201).json({ user: newUser });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
 
 // @route POST /login
 router.post(
@@ -109,92 +78,6 @@ router.post(
   })
 );
 
-// @route POST /login
-router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "User does not exist" });
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid)
-      return res.status(400).json({ message: "Invalid credentials" });
-
-    const token = generateToken(user._id, user.role);
-
-    // Set HTTP-only cookie
-    res.cookie("jwt", token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "strict",
-    });
-
-    res.status(200).json({ user });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// @route POST /api/auth/update password
-router.post("/update-password", authMiddleware, async (req, res) => {
-  const { oldPassword, newPassword, confirmPassword } = req.body;
-
-  if (newPassword !== confirmPassword) {
-    return res.status(400).json({ message: "Passwords do not match" });
-  }
-
-  try {
-    const user = await User.findById(req.user.id).select("-password");
-
-    const isMatch = await bcrypt.compare(oldPassword, user.password);
-    if (!isMatch)
-      return res.status(401).json({ message: "Invalid credentials" });
-
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(newPassword, salt);
-
-    await user.save();
-
-    res.status(200).json({ message: "Password updated successfully" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-router.post("/admin/login", async (req, res) => {
-  const { email, password } = req.body;
-
-  console.log(email, password);
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    console.log(user);
-
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    console.log(isMatch);
-
-    if (user.role !== "admin")
-      return res.status(401).json({ message: "Invalid credentials" });
-
-    if (!isMatch)
-      return res.status(401).json({ message: "Invalid credentials" });
-
-    const token = generateToken(user._id, user.role);
-
-    // Set HTTP-only cookie
-    res.cookie("jwt", token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "strict",
-    });
-    res.status(200).json({ user });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
 
 // @route POST /api/auth/login
 router.post("/login", async (req, res) => {
@@ -204,7 +87,7 @@ router.post("/login", async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await comparePassword(password, user.password);
 
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
@@ -212,11 +95,7 @@ router.post("/login", async (req, res) => {
     const token = generateToken(user._id, user.role);
 
     // Set HTTP-only cookie
-    res.cookie("jwt", token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "strict",
-    });
+    setTokenCookie(res, token);
     res.status(200).json({ user });
   } catch (err) {
     res.status(500).json({ message: err.message });
